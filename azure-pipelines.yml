@@ -1,0 +1,56 @@
+
+pool:
+  vmImage: 'ubuntu-latest'
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '12.x'
+
+- task: Npm@1
+  displayName: "Install"
+  inputs:
+    command: 'install'
+- task: Npm@1
+  displayName: "Test"
+  inputs:
+    command: 'custom'
+    customCommand: 'run test-ci'
+- task: SonarCloudPrepare@1
+  displayName: "Sonar Cloud Preparation"
+  inputs:
+    SonarCloud: 'Sonar-Cloud-Dani'
+    organization: 'danielavo'
+    scannerMode: 'CLI'
+    configMode: 'manual'
+    cliProjectKey: 'DanielaVO_pet-book'
+    cliSources: '.'
+    extraProperties: |
+      # Additional properties that will be passed to the scanner, 
+      # Put one key=value per line, example:
+      # sonar.exclusions=**/*.bin
+      sonar.projectVersion=1.0.0
+      sonar.sourceEncoding=UTF-8
+      sonar.sources=src
+      sonar.exclusions=**/node_modules/**,**/*.spec.ts
+      sonar.tests=src/app
+      sonar.test.inclusions=**/*.spec.ts
+      sonar.qualitygate.wait=true
+      sonar.qualitygate.timeout=300
+      sonar.ts.tslint.configPath=tslint.json
+      sonar.typescript.lcov.reportPaths=coverage/lcov.info
+- task: SonarCloudAnalyze@1
+  displayName: "Sonar Cloud Analysis"
+
+- task: Npm@1
+  displayName: "Build"
+  inputs:
+    command: 'custom'
+    customCommand: 'run build --prod'
+
+- task: Docker@2
+  displayName: "Docker build and push"
+  inputs:
+    containerRegistry: 'Docker-Sebas'
+    repository: 'sebassllr/pet-book'
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile'
