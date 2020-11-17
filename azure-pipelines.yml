@@ -15,9 +15,40 @@ steps:
   inputs:
     command: 'custom'
     customCommand: 'run test-ci'
+- task: SonarCloudPrepare@1
+  displayName: "Sonar Cloud Preparation"
+  inputs:
+    SonarCloud: 'Sonarcloud'
+    organization: 'valentinaleniscaicedo'
+    scannerMode: 'CLI'
+    configMode: 'manual'
+    cliProjectKey: 'ValentinaLenisCaicedo_Pet-book'
+    cliProjectName: 'Pet-book'
+    cliSources: '.'
+    extraProperties: |
+      # Additional properties that will be passed to the scanner, 
+      # Put one key=value per line, example:
+      # sonar.exclusions=**/*.bin
+      sonar.projectVersion=1.0.0
+      sonar.sourceEncoding=UTF-8
+      sonar.sources=src
+      sonar.exclusions=**/node_modules/**,**/*.spec.ts
+      sonar.tests=src/app
+      sonar.test.inclusions=**/*.spec.ts
+      sonar.qualitygate.wait=true
+      sonar.qualitygate.timeout=300
+      sonar.ts.tslint.configPath=tslint.json
+      sonar.typescript.lcov.reportPaths=coverage/lcov.info
+- task: SonarCloudAnalyze@1
+  displayName: "Sonar Cloud Analysis"
+
 - task: Npm@1
   displayName: "Build"
   inputs:
     command: 'custom'
     customCommand: 'run build --prod'
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish Pipeline Artifact'
+  inputs:
+    targetPath: 'dist'
 
